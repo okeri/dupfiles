@@ -1,0 +1,9 @@
+[package]
+name = "dupfiles"
+version = "0.1.0"
+authors = ["Oleg Keri <ezhi99@mail.com>"]
+edition = "2018"
+
+[dependencies]
+rust-crypto = "*"
+getch = "*"
