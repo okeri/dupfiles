@@ -3,6 +3,7 @@ use std::io::prelude::*;
 use std::fs::{File, remove_file, rename, create_dir_all};
 use std::path::Path;
 use std::collections::BTreeMap;
+use std::cmp::min;
 use crypto::digest::Digest;
 use crypto::sha2::Sha256;
 use getch::Getch;
@@ -95,11 +96,24 @@ impl HashDB {
     }
 
     fn hash(&mut self, filename: &Path) -> io::Result<String> {
+        const BUF_SIZE: usize = 0x200000;
+        let mt = filename.metadata()?;
+        let mut left = mt.len() as usize;
         let mut input = File::open(filename)?;
         let mut buffer = Vec::new();
-        input.read_to_end(&mut buffer)?;
         self.hasher.reset();
-        self.hasher.input(buffer.as_mut());
+        while left > 0 {
+            let read = min(left, BUF_SIZE);
+            if read != buffer.len() {
+                buffer.reserve(read);
+                unsafe {
+                    buffer.set_len(read);
+                }
+            }
+            input.read_exact(&mut buffer).expect("ok?");
+            left -= read;
+            self.hasher.input(buffer.as_mut());
+        }
         Ok(self.hasher.result_str())
     }
 
@@ -149,6 +163,9 @@ impl HashDB {
                 } else {
                     self.db.insert(hash, filename.to_owned());
                 }
+            }
+            else {
+                println!("cannot hash {}", filename.to_owned());
             }
         }
     }
