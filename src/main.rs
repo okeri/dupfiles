@@ -7,6 +7,7 @@ mod hashdb;
 
 fn visit_dirs(dir: &Path, cb: &mut FnMut(&Path)) -> io::Result<()> {
     if dir.is_dir() {
+        println!("processing {}...", dir.to_str().unwrap());
         for entry in fs::read_dir(dir)? {
             let entry = entry?;
             if let Ok(tp) = entry.file_type() {
